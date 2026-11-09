@@ -25,6 +25,20 @@ describe('HtmlDataSource.getUserCollections', () => {
       .rejects.toBeInstanceOf(AuthError);
   });
 
+  it('returns book titles and honors pagination for the default book layout', async () => {
+    mockedAxios.get.mockResolvedValue({
+      status: 200,
+      data: loadFixture('user/collections-books.html'),
+      request: { res: { responseUrl: 'https://book.douban.com/people/test/collect?start=15' } },
+    });
+    const list = await makeDS().getUserCollections('test', 'book', 'collect', 15, 1);
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      'https://book.douban.com/people/test/collect?start=15', expect.any(Object)
+    );
+    expect(list).toHaveLength(1);
+    expect(list[0].subject.title).toBe('失去一切的人');
+  });
+
   it('returns parsed collections when given uid', async () => {
     mockedAxios.get.mockResolvedValue({
       status: 200,

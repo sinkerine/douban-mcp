@@ -11,15 +11,15 @@ export function parseUserCollections(
   const out: Collection[] = [];
   const baseUrl = category === 'movie' ? 'https://movie.douban.com' : 'https://book.douban.com';
 
-  // 旧版 .grid-view .item（多年主流）；新版 .subject-list .subject-item 兜底
-  const items = $('.grid-view .item, .subject-list .subject-item, .item-show');
+  // 电影网格、图书默认视图和列表视图。
+  const items = $('.grid-view .item, .interest-list .subject-item, .subject-list .subject-item, .item-show');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items.each((_: any, el: any) => {
-    // 标题链接：.title a（旧版 li.title > a），兜底 a[href*="/subject/"]
-    const titleLi = $(el).find('li.title');
-    const a = titleLi.find('a').first().length
-      ? titleLi.find('a').first()
-      : $(el).find('a[href*="/subject/"]').first();
+    // 封面链接通常排在标题前面；优先标题位置，再兜底有文字的条目链接。
+    const titleLink = $(el).find('.title a[href*="/subject/"], h2 a[href*="/subject/"], h3 a[href*="/subject/"]').first();
+    const a = titleLink.length
+      ? titleLink
+      : $(el).find('a[href*="/subject/"]').filter((_, link) => $(link).text().trim().length > 0).first();
 
     const url = a.attr('href') ?? '';
     const m = url.match(/\/subject\/(\d+)/);

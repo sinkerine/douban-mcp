@@ -13,6 +13,47 @@ describe('parseUserCollections (movie/collect)', () => {
   });
 });
 
+describe('parseUserCollections (book)', () => {
+  const html = loadFixture('user/collections-books.html');
+
+  it.each(['wish', 'do', 'collect'] as const)('parses the default interest list with status %s', (status) => {
+    const items = parseUserCollections(html, 'book', status);
+    expect(items).toHaveLength(2);
+    expect(items[0]).toEqual({
+      subject: {
+        id: '36467411',
+        title: '失去一切的人',
+        url: 'https://book.douban.com/subject/36467411/',
+        cover: 'https://img.example/book.jpg',
+      },
+      status,
+      rating: 5,
+      comment: '值得一读',
+      tags: ['小说', '文学'],
+      markedAt: '2026-11-08',
+    });
+    expect(items[1].subject.title).toBe('地下室手记');
+    expect(items[1].subject.url).toBe('https://book.douban.com/subject/1000002/');
+  });
+
+  it('keeps supporting the subject-list layout', () => {
+    expect(parseUserCollections(html.replace('interest-list', 'subject-list'), 'book', 'collect'))
+      .toHaveLength(2);
+  });
+
+  it('parses list view titles after an empty cover link', () => {
+    const list = `<div class="item-show"><a href="/subject/1000003/"><img src="cover.jpg"></a>
+      <div class="title"><a href="/subject/1000003/">白夜</a></div></div>`;
+    expect(parseUserCollections(list, 'book', 'collect')[0].subject.title).toBe('白夜');
+  });
+
+  it('falls back to a subject link with text when no heading is present', () => {
+    const list = `<div class="item-show"><a href="/subject/1000003/"><img src="cover.jpg"></a>
+      <a href="/subject/1000003/">白夜</a></div>`;
+    expect(parseUserCollections(list, 'book', 'collect')[0].subject.title).toBe('白夜');
+  });
+});
+
 describe('parseUserProfile', () => {
   const profile = parseUserProfile(loadFixture('user/profile.html'));
   it('extracts uid and name', () => {
